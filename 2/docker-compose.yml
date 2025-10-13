@@ -4,6 +4,7 @@ services:
   demo_db:
     image: mariadb:11
     container_name: demo_db
+    restart: always
     environment:
       MYSQL_ROOT_PASSWORD: rootpass
     networks:
@@ -12,13 +13,15 @@ services:
       - db_data:/var/lib/mysql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-prootpass"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
+      interval: 20s
+      timeout: 10s
+      retries: 15
+      start_period: 40s   # tiempo adicional para que la base arranque sin errores
 
   demo_api:
     build: ./api
     container_name: demo_api
+    restart: always
     environment:
       DB_HOST: demo_db
       DB_ROOT_PASSWORD: rootpass
@@ -38,6 +41,7 @@ services:
   demo_web:
     build: ./web
     container_name: demo_web
+    restart: always
     depends_on:
       - demo_api
     networks:
