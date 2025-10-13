@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Prueba básica Docker + Node + Nginx</title>
+  <style>
+    body { font-family: system-ui; padding: 2rem; background: #fafafa; }
+    button { padding: 10px 20px; border-radius: 6px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h2>✅ Prueba básica Docker + Node + Nginx</h2>
+  <button id="btn">Probar conexión</button>
+  <pre id="out"></pre>
+
+  <script>
+    const out = document.getElementById('out');
+    document.getElementById('btn').onclick = async () => {
+      out.textContent = 'Conectando...';
+      try {
+        const r = await fetch('/api/health');
+        const j = await r.json();
+        out.textContent = JSON.stringify(j, null, 2);
+      } catch (e) {
+        out.textContent = 'Error: ' + e;
+      }
+    };
+  </script>
+</body>
+</html>
