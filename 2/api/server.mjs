@@ -12,12 +12,20 @@ app.use(express.json());
 const UPLOAD_DIR = '/uploads';
 fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
-const pool = await mysql.createPool({
-  host: process.env.DB_HOST || 'demo_db',
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || 'rootpass',
-  database: process.env.DB_NAME || 'demo',
-});
+console.log('📦 Connecting to MariaDB...');
+
+let pool;
+try {
+  pool = await mysql.createPool({
+    host: process.env.DB_HOST || 'demo_db',
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD || 'rootpass',
+    database: process.env.DB_NAME || undefined,
+  });
+  console.log('✅ MariaDB connection pool ready');
+} catch (err) {
+  console.error('❌ Error connecting to DB:', err.message);
+}
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, UPLOAD_DIR),
@@ -29,16 +37,19 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-await pool.query(`
-  CREATE TABLE IF NOT EXISTS formularios (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    nombre VARCHAR(120),
-    email VARCHAR(180),
-    edad VARCHAR(20),
-    archivo VARCHAR(255),
-    fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-  );
-`);
+if (pool) {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS formularios (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      nombre VARCHAR(120),
+      email VARCHAR(180),
+      edad VARCHAR(20),
+      archivo VARCHAR(255),
+      fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+  console.log('🧩 Table "formularios" ensured');
+}
 
 app.post('/api/formulario', upload.single('archivo'), async (req, res) => {
   try {
@@ -50,17 +61,22 @@ app.post('/api/formulario', upload.single('archivo'), async (req, res) => {
     );
     res.json({ ok: true });
   } catch (e) {
+    console.error('❌ Insert error:', e.message);
     res.status(500).json({ ok: false, error: e.message });
   }
 });
 
 app.get('/api/formularios', async (req, res) => {
-  const [rows] = await pool.query('SELECT * FROM formularios ORDER BY id DESC');
-  res.json(rows);
+  try {
+    const [rows] = await pool.query('SELECT * FROM formularios ORDER BY id DESC');
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
 });
 
-app.get('/api/health', (req, res) => res.json({ ok: true }));
 app.use('/api/files', express.static(UPLOAD_DIR));
+app.get('/api/health', (req, res) => res.json({ ok: true }));
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log('API running on port', PORT));
+app.listen(PORT, () => console.log(`🚀 API running on port ${PORT}`));

@@ -8,6 +8,8 @@ services:
       MYSQL_ROOT_PASSWORD: rootpass
     networks:
       - demo_net
+    volumes:
+      - db_data:/var/lib/mysql
 
   demo_api:
     build: ./api
@@ -22,6 +24,8 @@ services:
       - demo_net
     ports:
       - "3000:3000"
+    volumes:
+      - ./api/uploads:/uploads
 
   demo_web:
     build: ./web
@@ -36,3 +40,6 @@ services:
 networks:
   demo_net:
     driver: bridge
+
+volumes:
+  db_data:
