@@ -1,0 +1,53 @@
+version: "3.9"
+
+services:
+  demo_db:
+    image: mariadb:11
+    container_name: demo_db
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+    networks:
+      - demo_net
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-prootpass"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  demo_api:
+    build: ./api
+    container_name: demo_api
+    environment:
+      DB_HOST: demo_db
+      DB_ROOT_PASSWORD: rootpass
+      APP_DB: demo
+      APP_USER: demo
+      APP_PASSWORD: demopass
+    depends_on:
+      demo_db:
+        condition: service_healthy
+    networks:
+      - demo_net
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./api/uploads:/uploads
+
+  demo_web:
+    build: ./web
+    container_name: demo_web
+    depends_on:
+      - demo_api
+    networks:
+      - demo_net
+    ports:
+      - "8080:80"
+
+networks:
+  demo_net:
+    driver: bridge
+
+volumes:
+  db_data:
