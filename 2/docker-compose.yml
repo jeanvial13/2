@@ -7,16 +7,19 @@ services:
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: demo
+      MYSQL_USER: demo
+      MYSQL_PASSWORD: demopass
     networks:
       - demo_net
     volumes:
-      - db_data:/var/lib/mysql
+      - ./db_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-prootpass"]
-      interval: 20s
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -prootpass || exit 1"]
+      interval: 30s
       timeout: 10s
       retries: 15
-      start_period: 40s   # tiempo adicional para que la base arranque sin errores
+      start_period: 90s  # NAS tarda más en inicializar discos, así evitamos unhealthy
 
   demo_api:
     build: ./api
@@ -24,10 +27,9 @@ services:
     restart: always
     environment:
       DB_HOST: demo_db
-      DB_ROOT_PASSWORD: rootpass
-      APP_DB: demo
-      APP_USER: demo
-      APP_PASSWORD: demopass
+      DB_USER: demo
+      DB_PASSWORD: demopass
+      DB_NAME: demo
     depends_on:
       demo_db:
         condition: service_healthy
@@ -52,6 +54,3 @@ services:
 networks:
   demo_net:
     driver: bridge
-
-volumes:
-  db_data:
