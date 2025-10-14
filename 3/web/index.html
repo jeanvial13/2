@@ -125,23 +125,24 @@
       }
     }
 
-    loginForm.onsubmit = async (e) => {
-      e.preventDefault();
-      const fd = new FormData(loginForm);
-      const body = { username: fd.get('username'), password: fd.get('password') };
-      const r = await fetch('/api/login', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
-      const j = await r.json();
-      if (j.ok) {
-        await checkMe();
-      } else {
-        alert('Login incorrecto');
-      }
-    };
+  loginForm.onsubmit = async (e) => {
+  e.preventDefault();
+  const fd = new FormData(loginForm);
+  const body = { username: fd.get('username'), password: fd.get('password') };
+  const r = await fetch('/api/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+    credentials: 'include' // 🔥 clave: envía cookie entre puertos
+  });
+  const j = await r.json();
+  if (j.ok) {
+    await checkMe();
+  } else {
+    alert('Login incorrecto');
+  }
+};
 
-    btnLogout.onclick = async () => {
-      await fetch('/api/logout', { method: 'POST' });
-      await checkMe();
-    };
 
     const startTimer = () => {
       clearInterval(timer);
