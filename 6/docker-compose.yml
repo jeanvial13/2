@@ -1,0 +1,49 @@
+version: "3.9"
+name: dem_roles_v5
+
+services:
+  db:
+    image: mariadb:11.4
+    container_name: dem_roles_db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: dem_roles_v5
+      MYSQL_USER: dem
+      MYSQL_PASSWORD: dempass
+      MYSQL_ROOT_PASSWORD: rootpass123!
+    volumes:
+      - /volume1/docker/dem_roles_v5/db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u$$MYSQL_USER -p$$MYSQL_PASSWORD --silent"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build: .
+    container_name: dem_roles_api
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    environment:
+      # IMPORTANTE: esta URL usa el hostname del servicio 'db'
+      DATABASE_URL: mysql://dem:dempass@db:3306/dem_roles_v5?connection_limit=10&socket_timeout=60000
+      PORT: "3000"
+      NODE_ENV: production
+
+      # JWT
+      JWT_SECRET: "cambia-esto-por-uno-muy-largo-y-unico"
+      JWT_EXPIRES_IN: "15m"
+      REFRESH_TOKEN_SECRET: "otro-secreto-largo-para-refresh"
+      REFRESH_TOKEN_EXPIRES_IN: "7d"
+
+      # Seed admin (idempotente; solo si no hay usuarios)
+      ADMIN_EMAIL: "admin@demo.local"
+      ADMIN_PASS: "demo123"
+      ADMIN_NAME: "System Admin"
+    ports:
+      - "3000:3000"
+    # Si quieres persistir uploads/otros, añade volúmenes aquí
+    # volumes:
+    #   - /volume1/docker/dem_roles_v5/uploads:/app/uploads
