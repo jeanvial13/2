@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Login + Formulario + Tabla (JSON persistente)</title>
+  <style>
+    body { font-family: system-ui; padding: 2rem; background:#fafafa; }
+    form { display:grid; gap:10px; max-width:420px; background:#fff; padding:1rem; border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,.1); }
+    #status { width:220px; height:42px; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; border-radius:8px; margin:1rem 0;}
+    #status.ok{ background:#28a745;} #status.error{background:#dc3545;}
+    .row { display:flex; gap:20px; align-items:flex-start; }
+    .hidden { display:none; }
+  </style>
+</head>
+<body>
+  <h2>🔐 Login + Formulario + Tabla (JSON persistente)</h2>
+
+  <div class="row">
+    <form id="loginForm">
+      <h3>Acceso</h3>
+      <input name="username" placeholder="Usuario" required value="admin">
+      <input name="password" placeholder="Contraseña" type="password" required value="demo123">
+      <button class="btn" id="btnLogin" type="button">Entrar</button>
+      <button id="logout" type="button" class="btn hidden">Salir</button>
+      <pre id="me"></pre>
+    </form>
+
+    <form id="form" class="hidden">
+      <h3>Formulario</h3>
+      <input name="nombre" placeholder="Nombre" required>
+      <input name="email" placeholder="Email" type="email" required>
+      <input name="edad" placeholder="Edad" type="number">
+      <input name="archivo" type="file">
+      <button class="btn" id="btnEnviar" type="button">Enviar</button>
+    </form>
+  </div>
+
+  <div id="status">Listo</div>
+
+  <script>
+    const loginForm = document.getElementById('loginForm');
+    const btnLogin  = document.getElementById('btnLogin');
+    const btnLogout = document.getElementById('logout');
+    const meBox     = document.getElementById('me');
+    const form      = document.getElementById('form');
+    const btnEnviar = document.getElementById('btnEnviar');
+    const statusBox = document.getElementById('status');
+
+    function setAuthed(on) {
+      form.classList.toggle('hidden', !on);
+      btnLogout.classList.toggle('hidden', !on);
+    }
+
+    async function checkMe() {
+      const r = await fetch('/api/me', { credentials: 'include' });
+      if (r.ok) {
+        const j = await r.json();
+        meBox.textContent = 'Usuario: ' + j.user.username;
+        setAuthed(true);
+      } else {
+        meBox.textContent = 'No autenticado';
+        setAuthed(false);
+      }
+    }
+
+    btnLogin.addEventListener('click', async () => {
+      const fd = new FormData(loginForm);
+      const body = { username: fd.get('username'), password: fd.get('password') };
+      const r = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+        credentials: 'include'
+      });
+      let j; try { j = await r.json(); } catch { j = { ok:false, error:'Respuesta no JSON' }; }
+      if (j.ok) { await checkMe(); } else { alert('Credenciales inválidas'); }
+    });
+
+    btnLogout.onclick = async () => {
+      await fetch('/api/logout', { method: 'POST', credentials: 'include' });
+      await checkMe();
+    };
+
+    btnEnviar.addEventListener('click', async () => {
+      const fd = new FormData(form);
+      const r = await fetch('/api/formulario', { method: 'POST', body: fd, credentials: 'include' });
+      let j; try { j = await r.json(); } catch { j = { ok:false, error:'Respuesta no JSON' }; }
+      statusBox.textContent = j.ok ? 'Éxito ✅' : 'Error ❌';
+      if (j.ok) form.reset();
+    });
+
+    checkMe();
+  </script>
+</body>
+</html>
