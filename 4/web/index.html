@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Roles: admin/user + JSON persistente</title>
+  <style>
+    body { font-family: system-ui; padding: 2rem; background:#fafafa; }
+    form { display:grid; gap:10px; max-width:420px; background:#fff; padding:1rem; border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,.1); }
+    table { border-collapse: collapse; width:100%; background:#fff; margin-top:1rem; }
+    th, td { border:1px solid #ddd; padding:8px; text-align:left;}
+    th { background:#e9ecef; }
+    .row { display:flex; gap:20px; align-items:flex-start; }
+    .hidden { display:none; }
+    .badge { display:inline-block; padding:2px 8px; border-radius:12px; background:#eef; }
+  </style>
+</head>
+<body>
+  <h2>🔐 Roles (admin / user) + Formulario + Tabla</h2>
+
+  <div class="row">
+    <form id="loginForm">
+      <h3>Acceso</h3>
+      <input name="username" placeholder="Usuario" required value="admin">
+      <input name="password" placeholder="Contraseña" type="password" required value="demo123">
+      <button id="btnLogin" type="button">Entrar</button>
+      <button id="logout" type="button" class="hidden">Salir</button>
+      <p id="me"></p>
+    </form>
+
+    <form id="form" class="hidden">
+      <h3>Formulario</h3>
+      <input name="nombre" placeholder="Nombre" required>
+      <input name="email" placeholder="Email" type="email" required>
+      <input name="edad" placeholder="Edad" type="number">
+      <input name="archivo" type="file">
+      <button id="btnEnviar" type="button">Enviar</button>
+      <div id="status"></div>
+    </form>
+  </div>
+
+  <div id="adminTools" class="hidden">
+    <label><input type="checkbox" id="verTodos"> Ver todos los registros (solo admin)</label>
+  </div>
+
+  <table id="tabla" class="hidden">
+    <thead>
+      <tr>
+        <th>ID</th><th>UsuarioId</th><th>Nombre</th><th>Email</th><th>Edad</th><th>Archivo</th><th>Fecha</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    const loginForm = document.getElementById('loginForm');
+    const btnLogin  = document.getElementById('btnLogin');
+    const btnLogout = document.getElementById('logout');
+    const me        = document.getElementById('me');
+    const form      = document.getElementById('form');
+    const btnEnviar = document.getElementById('btnEnviar');
+    const statusBox = document.getElementById('status');
+    const adminTools= document.getElementById('adminTools');
+    const verTodos  = document.getElementById('verTodos');
+    const tabla     = document.getElementById('tabla');
+    const tbody     = tabla.querySelector('tbody');
+
+    function setAuthed(on, role) {
+      form.classList.toggle('hidden', !on);
+      btnLogout.classList.toggle('hidden', !on);
+      tabla.classList.toggle('hidden', !on);
+      adminTools.classList.toggle('hidden', !(on && role==='admin'));
+    }
+
+    async function checkMe() {
+      const r = await fetch('/api/me', { credentials: 'include' });
+      if (r.ok) {
+        const j = await r.json();
+        me.innerHTML = 'Usuario: <span class="badge">' + j.user.username + '</span> — Rol: <span class="badge">' + j.user.role + '</span>';
+        setAuthed(true, j.user.role);
+        load();
+      } else {
+        me.textContent = 'No autenticado';
+        setAuthed(false);
+      }
+    }
+
+    async function load() {
+      const url = verTodos.checked ? '/api/formularios?all=true' : '/api/formularios';
+      const r = await fetch(url, { credentials: 'include' });
+      if (!r.ok) { tbody.innerHTML = '<tr><td colspan="7">No autorizado</td></tr>'; return; }
+      const data = await r.json();
+      tbody.innerHTML = data.map(r => \`
+        <tr>
+          <td>\${r.id}</td>
+          <td>\${r.userId}</td>
+          <td>\${r.nombre}</td>
+          <td>\${r.email}</td>
+          <td>\${r.edad ?? ''}</td>
+          <td>\${r.archivo ? '<a href="/api/files/' + r.archivo + '" target="_blank">Descargar</a>' : ''}</td>
+          <td>\${r.fecha ? new Date(r.fecha).toLocaleString(): ''}</td>
+        </tr>
+      \`).join('');
+    }
+
+    btnLogin.onclick = async () => {
+      const fd = new FormData(loginForm);
+      const body = { username: fd.get('username'), password: fd.get('password') };
+      const r = await fetch('/api/login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body), credentials:'include' });
+      const j = await r.json();
+      if (j.ok) await checkMe(); else alert('Credenciales inválidas');
+    };
+    btnLogout.onclick = async () => {
+      await fetch('/api/logout', { method:'POST', credentials:'include' });
+      await checkMe();
+    };
+    btnEnviar.onclick = async () => {
+      const fd = new FormData(form);
+      const r = await fetch('/api/formulario', { method:'POST', body: fd, credentials:'include' });
+      const j = await r.json().catch(()=>({ok:false}));
+      statusBox.textContent = j.ok ? '✔️ Enviado' : '❌ Error';
+      if (j.ok) { form.reset(); load(); }
+    };
+    verTodos.onchange = load;
+
+    checkMe();
+  </script>
+</body>
+</html>
