@@ -12,29 +12,28 @@ services:
     networks: [appnet]
 
   backend:
-    build: ./backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
     environment:
       NODE_ENV: production
       JWT_SECRET: ${JWT_SECRET:-cambialo}
-      # Prisma/DB
       DATABASE_URL: postgresql://${POSTGRES_USER:-app}:${POSTGRES_PASSWORD:-app}@db:5432/${POSTGRES_DB:-flowboard}
-      # CORS
       CORS_ORIGIN: ${PUBLIC_FRONTEND_URL:-http://localhost}
-      # Carpeta interna donde guarda adjuntos
       UPLOAD_DIR: /app/uploads
     depends_on: [db]
     volumes:
-      # 👇 Volumen nombrado (no usa rutas del host, no falla con los dos puntos)
+      # usa volumen nombrado o pon aquí una ruta absoluta del NAS
       - uploads_data:/app/uploads
     networks: [appnet]
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
     environment:
-      # El frontend hablará con Nginx en /api
       VITE_API_BASE: ${PUBLIC_API_URL:-/api}
-    depends_on: [backend]
     networks: [appnet]
+    depends_on: [backend]
 
   nginx:
     image: nginx:1.25-alpine
