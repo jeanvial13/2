@@ -1,28 +1,15 @@
-# Etapa de runtime (no necesitamos multistage si no transpila)
 FROM node:20-alpine
-
 WORKDIR /app
-
-# Toolchain por si hay dependencias nativas (bcrypt, sharp, etc.)
 RUN apk add --no-cache python3 make g++ openssl
-
-# Copiamos manifest primero para cache eficiente
 COPY package.json package-lock.json* ./
-
-# Si existe lock -> npm ci, si no -> npm install
 RUN if [ -f package-lock.json ]; then \
-      npm ci --omit=dev --no-audit --no-fund; \
+      npm ci --omit=dev --no-audit --no-fund || (echo "npm ci failed, trying npm install" && npm install --omit=dev --no-audit --no-fund --legacy-peer-deps); \
     else \
-      npm install --omit=dev --no-audit --no-fund; \
+      npm install --omit=dev --no-audit --no-fund --legacy-peer-deps; \
     fi
-
-# Resto del código
 COPY . .
-
-# Si usas Prisma, no falla si no está:
-RUN npx prisma generate || true
-
+# Si usas Prisma:
+# RUN npx prisma generate || true
 ENV PORT=3000
 EXPOSE 3000
-
-CMD ["node","server.js"]
+CMD ["node","server.js"]    # o el entrypoint que tengas
