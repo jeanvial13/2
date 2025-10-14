@@ -1,21 +1,28 @@
-FROM node:20-alpine AS deps
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci
-
-FROM node:20-alpine AS builder
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
-COPY . ./
-RUN npm run prisma:generate && npm run build
-
+# Etapa de runtime (no necesitamos multistage si no transpila)
 FROM node:20-alpine
+
 WORKDIR /app
-ENV NODE_ENV=production
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/src ./src
-RUN mkdir -p /app/uploads
-EXPOSE 4000
-CMD ["node", "dist/server.js"]
+
+# Toolchain por si hay dependencias nativas (bcrypt, sharp, etc.)
+RUN apk add --no-cache python3 make g++ openssl
+
+# Copiamos manifest primero para cache eficiente
+COPY package.json package-lock.json* ./
+
+# Si existe lock -> npm ci, si no -> npm install
+RUN if [ -f package-lock.json ]; then \
+      npm ci --omit=dev --no-audit --no-fund; \
+    else \
+      npm install --omit=dev --no-audit --no-fund; \
+    fi
+
+# Resto del código
+COPY . .
+
+# Si usas Prisma, no falla si no está:
+RUN npx prisma generate || true
+
+ENV PORT=3000
+EXPOSE 3000
+
+CMD ["node","server.js"]
