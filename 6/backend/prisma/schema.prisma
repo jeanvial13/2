@@ -1,0 +1,57 @@
+generator client { provider = "prisma-client-js" }
+datasource db { provider = "postgresql"; url = env("DATABASE_URL") }
+
+model User {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  password  String
+  role      String   @default("user")
+  createdAt DateTime @default(now())
+}
+
+model Project {
+  id           String   @id
+  title        String
+  owner        String
+  responsible  String
+  stage        String
+  due          String
+  udDocument   String?
+  createdAt    DateTime @default(now())
+  lastUpdateAt DateTime @updatedAt
+  blocked      Boolean  @default(false)
+  archived     Boolean  @default(false)
+  details      String[]
+  raci         Json     @default("{\"R\":[],\"A\":[],\"C\":[],\"I\":[]}")
+  history      History[]
+  notes        Note[]
+  attachments  Attachment[]
+}
+
+model History {
+  id        String   @id @default(cuid())
+  stage     String
+  enteredAt DateTime
+  exitedAt  DateTime?
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId String
+}
+
+model Note {
+  id        String   @id @default(cuid())
+  text      String
+  createdAt DateTime @default(now())
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId String
+}
+
+model Attachment {
+  id        String   @id @default(cuid())
+  filename  String
+  original  String
+  mime      String
+  size      Int
+  createdAt DateTime @default(now())
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId String
+}
