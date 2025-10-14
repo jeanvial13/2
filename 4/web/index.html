@@ -18,7 +18,8 @@
   <h2>🔐 Roles (admin / user) + Formulario + Tabla</h2>
 
   <div class="row">
-    <form id="loginForm">
+    <!-- 🔥 Evitamos que el form recargue la página -->
+    <form id="loginForm" onsubmit="return false;">
       <h3>Acceso</h3>
       <input name="username" placeholder="Usuario" required value="admin">
       <input name="password" placeholder="Contraseña" type="password" required value="demo123">
@@ -27,7 +28,7 @@
       <p id="me"></p>
     </form>
 
-    <form id="form" class="hidden">
+    <form id="form" class="hidden" onsubmit="return false;">
       <h3>Formulario</h3>
       <input name="nombre" placeholder="Nombre" required>
       <input name="email" placeholder="Email" type="email" required>
@@ -89,30 +90,32 @@
       const r = await fetch(url, { credentials: 'include' });
       if (!r.ok) { tbody.innerHTML = '<tr><td colspan="7">No autorizado</td></tr>'; return; }
       const data = await r.json();
-      tbody.innerHTML = data.map(r => \`
+      tbody.innerHTML = data.map(r => `
         <tr>
-          <td>\${r.id}</td>
-          <td>\${r.userId}</td>
-          <td>\${r.nombre}</td>
-          <td>\${r.email}</td>
-          <td>\${r.edad ?? ''}</td>
-          <td>\${r.archivo ? '<a href="/api/files/' + r.archivo + '" target="_blank">Descargar</a>' : ''}</td>
-          <td>\${r.fecha ? new Date(r.fecha).toLocaleString(): ''}</td>
+          <td>${r.id}</td>
+          <td>${r.userId}</td>
+          <td>${r.nombre}</td>
+          <td>${r.email}</td>
+          <td>${r.edad ?? ''}</td>
+          <td>${r.archivo ? '<a href="/api/files/' + r.archivo + '" target="_blank">Descargar</a>' : ''}</td>
+          <td>${r.fecha ? new Date(r.fecha).toLocaleString(): ''}</td>
         </tr>
-      \`).join('');
+      `).join('');
     }
 
     btnLogin.onclick = async () => {
       const fd = new FormData(loginForm);
       const body = { username: fd.get('username'), password: fd.get('password') };
       const r = await fetch('/api/login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body), credentials:'include' });
-      const j = await r.json();
+      const j = await r.json().catch(()=>({ok:false}));
       if (j.ok) await checkMe(); else alert('Credenciales inválidas');
     };
+
     btnLogout.onclick = async () => {
       await fetch('/api/logout', { method:'POST', credentials:'include' });
       await checkMe();
     };
+
     btnEnviar.onclick = async () => {
       const fd = new FormData(form);
       const r = await fetch('/api/formulario', { method:'POST', body: fd, credentials:'include' });
