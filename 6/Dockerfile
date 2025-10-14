@@ -7,7 +7,7 @@ RUN apk add --no-cache openssl
 
 # Copiamos manifiestos primero para cachear instalación
 COPY package.json package-lock.json* ./
-RUN npm ci
+RUN npm install
 
 # Copiamos el resto del código
 COPY prisma ./prisma
