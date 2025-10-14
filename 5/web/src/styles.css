@@ -1,0 +1,20 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Light theme tipo Power BI con acentos rojos */
+:root { --brand:#C8102E; }
+
+.badge { @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-700; }
+.card { @apply bg-white shadow-sm rounded-2xl p-6 border border-gray-100; }
+.btn  { @apply inline-flex justify-center items-center rounded-lg px-4 py-2 font-medium transition; }
+.btn-primary { @apply btn text-white; background: var(--brand); }
+.btn-primary:hover { filter: brightness(0.95); }
+.btn-outline { @apply btn border border-gray-300 bg-white hover:bg-gray-50; }
+.input { @apply border rounded-lg px-3 py-2; }
+.table { @apply w-full text-sm; }
+.table th { @apply text-left font-semibold text-gray-600 border-b border-gray-200 p-3; }
+.table td { @apply border-b border-gray-100 p-3; }
+.kpi { @apply card flex items-center gap-4; }
+.kpi-icon { @apply w-12 h-12 rounded-xl flex items-center justify-center text-white; background: var(--brand); }
+.toast { @apply fixed right-4 bottom-4 bg-black/80 text-white px-4 py-2 rounded-lg shadow z-50; }
