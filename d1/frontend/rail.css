@@ -1,0 +1,10 @@
+.node { cursor: pointer; }
+.stage-circle { fill: #ffffff; stroke: #0ea5e9; stroke-width: 2; }
+.stage-circle.special { stroke: #2563eb; }
+.stage-active { fill: #0ea5e9; }
+.stage-done { fill: #10b981; }
+.stage-text { font-size: 10px; text-anchor: middle; }
+.rail { stroke: #94a3b8; stroke-width: 3; fill: none; }
+.rail-branch { stroke: #94a3b8; stroke-width: 2; fill: none; stroke-dasharray: 4 4; }
+.cancel { fill: #ef4444; }
+.close { fill: #0ea5e9; }

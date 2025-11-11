@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>IT SEALS project track</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="./rail.css">
+</head>
+<body class="bg-slate-50 text-slate-800">
+  <div class="max-w-7xl mx-auto p-4 space-y-4">
+    <header class="flex items-center justify-between">
+      <h1 class="text-2xl font-bold">IT SEALS project track</h1>
+      <div class="flex gap-2 items-center">
+        <input id="search" placeholder="Search everywhere..." class="border rounded px-3 py-1 w-64" />
+        <button id="btnAll" class="text-xs px-2 py-1 border rounded">Show all</button>
+        <div id="authBox" class="flex items-center gap-2">
+          <input id="username" class="border rounded px-2 py-1" placeholder="user" value="admin"/>
+          <input id="password" class="border rounded px-2 py-1" type="password" placeholder="password" value="admin123"/>
+          <button id="login" class="bg-black text-white px-3 py-1 rounded">Login</button>
+          <span id="whoami" class="text-xs text-slate-500"></span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Rail -->
+    <section class="bg-white rounded-xl shadow p-4">
+      <div class="flex items-center justify-between mb-2">
+        <h2 class="font-semibold">Project Status Rail</h2>
+        <div class="text-xs text-slate-500">Click a stage to update status</div>
+      </div>
+      <div class="overflow-x-auto">
+        <svg id="railSvg" viewBox="0 0 1600 220" class="min-w-[1200px] w-full h-[220px]"></svg>
+      </div>
+    </section>
+
+    <!-- Controls -->
+    <section class="bg-white rounded-xl shadow p-4 grid md:grid-cols-3 gap-4">
+      <div class="space-y-2">
+        <h3 class="font-semibold">New Project</h3>
+        <div class="grid gap-2">
+          <input id="pName" class="border rounded px-2 py-1" placeholder="Project Name" />
+          <input id="pRequester" class="border rounded px-2 py-1" placeholder="Requester" />
+          <input id="pSponsor" class="border rounded px-2 py-1" placeholder="Sponsor" />
+          <input id="pOwner" class="border rounded px-2 py-1" placeholder="Business Analyst" />
+          <input id="pCC" class="border rounded px-2 py-1" placeholder="Cost Center" />
+          <label class="text-sm">Priority (1 = highest)</label>
+          <input id="pPriority" type="number" min="1" max="4" class="border rounded px-2 py-1" value="3"/>
+          <div class="flex gap-2">
+            <button id="createProject" class="bg-emerald-600 text-white px-3 py-1 rounded">Create</button>
+            <button id="createSpecial" class="bg-blue-600 text-white px-3 py-1 rounded">Special Projects</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-2">
+        <h3 class="font-semibold">RACI Matrix</h3>
+        <div class="grid grid-cols-4 gap-2 text-sm">
+          <label>R</label><input id="rR" class="border rounded px-2 py-1 col-span-3"/>
+          <label>A</label><input id="rA" class="border rounded px-2 py-1 col-span-3"/>
+          <label>C</label><input id="rC" class="border rounded px-2 py-1 col-span-3"/>
+          <label>I</label><input id="rI" class="border rounded px-2 py-1 col-span-3"/>
+        </div>
+        <div class="flex gap-2">
+          <button id="saveRaci" class="border px-3 py-1 rounded">Save RACI</button>
+          <button id="hold" class="border px-3 py-1 rounded">Hold</button>
+          <button id="close" class="border px-3 py-1 rounded">Close</button>
+        </div>
+        <div id="slaBox" class="text-sm mt-2"></div>
+      </div>
+
+      <div class="space-y-2">
+        <h3 class="font-semibold">Notes</h3>
+        <div class="flex gap-2">
+          <input id="noteText" class="border rounded px-2 py-1 w-full" placeholder="Add a note"/>
+          <button id="addNote" class="border px-3 py-1 rounded">Add</button>
+        </div>
+        <ul id="notes" class="text-sm space-y-1 max-h-40 overflow-auto"></ul>
+      </div>
+    </section>
+
+    <!-- Project bar -->
+    <section class="bg-white rounded-xl shadow p-4">
+      <div class="flex items-center justify-between mb-2">
+        <h3 class="font-semibold">Projects</h3>
+        <span class="text-xs text-slate-500">Select to view & edit</span>
+      </div>
+      <div id="projectBar" class="flex flex-wrap gap-2"></div>
+    </section>
+  </div>
+
+  <script src="./app.js"></script>
+</body>
+</html>

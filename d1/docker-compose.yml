@@ -1,0 +1,13 @@
+version: "3.9"
+services:
+  d1:
+    build: ./backend
+    container_name: d1
+    ports:
+      - "3000:3000"
+    environment:
+      - JWT_SECRET=change_me_in_prod
+      - PORT=3000
+    volumes:
+      - ./backend/db.json:/app/db.json
+      - ./frontend:/app/../frontend:ro
